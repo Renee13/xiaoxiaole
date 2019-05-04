@@ -10,7 +10,7 @@ cc.Class({
         },
         WorldAudio: {
             default: null,
-            url: cc.AudioClip
+            type: cc.AudioClip
         },
 
     },
@@ -18,8 +18,8 @@ cc.Class({
     onLoad () {
         //场景加载时执行
         //侦听touchend事件来触发转到menu场景方法。不能用click，否则在微信中无效。
-        this.StartBtn.node.on('touchend', this.ToMenu.bind(this));
         this.gameSceneBGMAudioId = cc.audioEngine.play(this.WorldAudio, true, 1);
+        this.StartBtn.node.on('touchend', this.ToMenu.bind(this));
     },
 
     ToMenu: function () {
