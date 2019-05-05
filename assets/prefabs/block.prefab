@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "寿司",
+    "_name": "block",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -22,13 +22,10 @@
     "_components": [
       {
         "__id__": 2
-      },
-      {
-        "__id__": 3
       }
     ],
     "_prefab": {
-      "__id__": 4
+      "__id__": 3
     },
     "_opacity": 255,
     "_color": {
@@ -40,8 +37,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 90,
-      "height": 90
+      "width": 100,
+      "height": 100
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -51,7 +48,7 @@
     "_position": {
       "__type__": "cc.Vec3",
       "x": 72,
-      "y": 198,
+      "y": 235,
       "z": 0
     },
     "_scale": {
@@ -85,7 +82,7 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "b46cf9ef-91dc-402b-a051-a1d699dbff8a"
+      "__uuid__": "2e6194c7-2a99-41cc-81ad-5bc952bfdaff"
     },
     "_type": 0,
     "_sizeMode": 0,
@@ -103,27 +100,14 @@
     "_id": ""
   },
   {
-    "__type__": "cc.Animation",
-    "_name": "",
-    "_objFlags": 0,
-    "node": {
-      "__id__": 1
-    },
-    "_enabled": true,
-    "_defaultClip": null,
-    "_clips": [],
-    "playOnLoad": false,
-    "_id": ""
-  },
-  {
     "__type__": "cc.PrefabInfo",
     "root": {
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "d4af6b71-6e45-4963-936c-e20c1a7f6ada"
+      "__uuid__": "85cfe106-29e2-4156-acf5-8c7e4dad6186"
     },
-    "fileId": "248J2EgWRPn6uA2S7KIFNp",
+    "fileId": "6fLxwtz1VCsqfazdoSY7eb",
     "sync": false
   }
 ]

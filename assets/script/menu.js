@@ -33,9 +33,9 @@ cc.Class({
         cc.director.pause();
         let alertE = cc.instantiate(this.alertMenuEvent);
         // cc.log(alertE);
-        cc.log("alertalertalertalertalertalert");
+        //cc.log("alertalertalertalertalertalert");
         alertE.parent = this.bg;
-        cc.log(alertE);
+        //cc.log(alertE);
     },
 
     

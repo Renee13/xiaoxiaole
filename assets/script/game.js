@@ -1,3 +1,5 @@
+
+
 import alert from 'alert';
 
 var rows = 8;
@@ -24,7 +26,12 @@ cc.Class({
         //间隔
         gap : 20,
         //块
-        blockSN : cc.Node,
+        blockSN : cc.Prefab,
+        //零食[]
+        snacks : {
+            default : [],
+            type : [cc.Prefab],
+        },
         //背景
         bg : cc.Node,
         //alert弹框资源
@@ -35,6 +42,7 @@ cc.Class({
         //侦听touchend事件来触他弹框。不能用click，否则在微信中无效。
         this.pauseBtn.node.on('touchend',this.AlertEvent.bind(this));
         this.drawBgBlocks();
+        //this.randomNum();
         this.init();
     },
 
@@ -47,9 +55,9 @@ cc.Class({
         //cc.log(alertE);
     },
 
-    // start () {
-    //     this.init();
-    // },
+    start () {
+
+    },
 
     drawBgBlocks() {
         //循环获得6*8的块
@@ -61,10 +69,7 @@ cc.Class({
         let x = this.gap + this.blockSizeW/2;
         //纵坐标
         let y = 125 + this.blockSizeH/2;
-        this.blockSN.width = this.blockSizeW;
-        this.blockSN.height = this.blockSizeH;
-        //设置块的坐标位置
-        this.blockSN.setPosition(cc.v2(x,y));
+       
         this.positions = [];
         for(let i = 0;i < rows;++i) {
             this.positions.push([0,0,0,0,0,0]);
@@ -72,9 +77,18 @@ cc.Class({
                 //克隆已有节点
                 let block = cc.instantiate(this.blockSN);
                 block.width = this.blockSizeW;
-                block.height = this.blockSizeH;       
+                block.height = this.blockSizeH; 
+                //设置块的坐标位置      
                 block.setPosition(cc.v2(x,y));
                 block.parent = this.bg;
+                if (this.randomNum() in this.snacks) {
+                    let snack = cc.instantiate(this.snacks[this.randomNum()]);
+                    snack.width = this.blockSizeW-5;
+                    snack.height = this.blockSizeH-5;
+                    snack.setPosition(0,0);
+                    snack.parent = block;
+                   
+                }
                 //cc.log(x)
                 this.positions[i][j] = cc.v2(x,y);
                 //横坐标加一个块的宽度
@@ -86,13 +100,33 @@ cc.Class({
             x = this.gap + this.blockSizeW/2;
             //cc.log(x,y);
         }
-        cc.log(this.positions);
+        //cc.log(this.positions);
+    },
+
+    randomNum () {
+        //取得1~6的整数；
+        let randoms = Math.random()*6;
+        //cc.log(randoms);
+        let num = Math.ceil(randoms);
+        //cc.log(num);
+        //cc.log(this.snacks[num]);
+        return num;
+        
     },
 
     init () {
         this.updateScore(0);
         this.updateSteps(9);
         this.updateCookies(15);
+        // if(this.blocks) {
+        //     for(let i = 0;i < rows;++i) {   
+        //         for (let j = 0;j < columns;++j) {  
+        //            if(this.blocks[i][j] == null) {
+        //                //填充零食
+        //            }
+        //         }    
+        //     }
+        // }
     },
 
     updateScore(number) {
@@ -109,5 +143,9 @@ cc.Class({
         this.cookies = number;
         this.cookiesLabel.string = number;
     },
+    
+    //存储每一块对应的零食；
+    
+
     // update (dt) {},
 });

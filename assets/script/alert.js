@@ -26,10 +26,10 @@ cc.Class({
     Closewin : function () {
         //销毁alert节点，即关闭；
         this.alert.destroy();
-        cc.log("看看能不能执行resume恢复场景");
+        //cc.log("看看能不能执行resume恢复场景");
         //恢复暂停的game场景；
         cc.director.resume();
-        cc.log("看看能不能执行resume恢复场景！！！！");
+        //cc.log("看看能不能执行resume恢复场景！！！！");
     },
 
     Again : function () {
