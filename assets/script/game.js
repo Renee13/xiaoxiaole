@@ -1,10 +1,11 @@
 
-
 import alert from 'alert';
 
 var rows = 8;
 var columns = 6;
-
+var m = {};
+var n = {};
+var vis = [];
 cc.Class({
     extends: cc.Component,
 
@@ -56,7 +57,7 @@ cc.Class({
     },
 
     start () {
-
+        // this.scanAllSnacks();
     },
 
     drawBgBlocks() {
@@ -69,7 +70,7 @@ cc.Class({
         let x = this.gap + this.blockSizeW/2;
         //纵坐标
         let y = 125 + this.blockSizeH/2;
-        var m = new Map();
+        
         this.positions = [];
         for(let i = 0;i < rows;++i) {
             this.positions.push([0,0,0,0,0,0]);
@@ -92,25 +93,12 @@ cc.Class({
 
                 }
 
-                // var location = this.positions[i][j];
-                // m[location] = snack.name;
-                m.set(this.positions[i][j],snack.name);
-                //let localName = snack.name; 
-                //cc.log(snack.name);
-                // cc.sys.localStorage.setItem(this.positions[i][j],localName);
-                // cc.log(typeof(this.positions[i][j]));
-                //cc.log(this.positions[i][j]);
-                // let localName = cc.sys.localStorage.getItem(this.positions[i][j]);
-                // cc.log(localName);
-                // let left1 = cc.sys.localStorage.getItem(this.positions[i][j-1]);
-                // let left2 = cc.sys.localStorage.getItem(this.positions[i][j-2]);
-                //cc.log(left1);
-                //cc.log(left2);
-                // if (left1 == left2 == localName)  {
-                //     snack.destroy();
-                //     j--;
-                //     continue;
-                // }
+                 //var location = this.positions[i][j];
+                 //m[location] = snack;
+                 m[this.positions[i][j]] = snack;
+                 n[this.positions[i][j]] = block;
+                //m.set(this.positions[i][j],snack);
+                //cc.log(m[this.positions[i][j]].name)
                 //cc.log(x)
                 
                 //横坐标加一个块的宽度
@@ -125,7 +113,7 @@ cc.Class({
             //cc.log(x,y);
         }
         //cc.log(m);
-        
+        this.scanAllSnacks();
         //cc.log(this.positions);
     },
 
@@ -133,11 +121,157 @@ cc.Class({
         //取得1~6的整数；
         let randoms = Math.random()*6;
         //cc.log(randoms);
+        //返回大于或等于其数值参数的最小整数;
         let num = Math.ceil(randoms);
         //cc.log(num);
         //cc.log(this.snacks[num]);
         return num;
         
+    },
+
+    scanSwapSnack (i,j) {
+        
+        for(let i = 0;i < rows;++i) {   
+            vis[i] = [];        
+            for (let j = 0;j < columns;++j) { 
+                vis[i][j] = 0;
+            }
+        }
+        //记录此次点击的零食；
+        var clickedSnack = m[this.positions[i][j]];
+        //cc.log(clickedSnack.name);
+        
+        //记录横向扫描的相同snack数，r_num；
+        var r_num = 0 ;
+        //记录纵向扫描的相同snack数，c_num；
+        var c_num = 0 ;
+        //向左扫描；其中本身也记录了
+        for (let a = 0; ;a++) {
+            if (j - a < 0 || m[this.positions[i][j-a]].name != clickedSnack.name) {
+                break;
+            }
+            if (m[this.positions[i][j-a]].name == clickedSnack.name) {
+                r_num++;
+                //记录与当前零食相同的零食；
+                vis[i][j-a]++;
+                //cc.log(vis[i][j-a]++);
+            }
+            //cc.log(m[this.positions[i][j-a]].name);
+        } 
+        //向右扫描；
+        for (let a = 1; ;a++) {
+            if (j + a > 5 || m[this.positions[i][j+a]].name != clickedSnack.name) {
+                break;
+            }
+            if (m[this.positions[i][j+a]].name == clickedSnack.name) {
+                r_num++;
+                vis[i][j+a]++;
+            }
+            //cc.log(m[this.positions[i][j+a]].name);
+        }
+        //判断是否能消除；
+        //r_num 小于 3 即不能消除；
+        // cc.log(r_num);
+        if (r_num < 3) {
+            r_num = 0;
+        }
+        //向下扫描；
+        for (let a = 0; ;a++) {
+            if (i - a < 0 || m[this.positions[i-a][j]].name != clickedSnack.name) {
+                break;
+            }
+            if (m[this.positions[i-a][j]].name == clickedSnack.name) {
+                c_num++;
+                //记录与当前零食相同的零食；
+                vis[i-a][j]++;
+                //cc.log(vis[i][j-a]++);
+            }
+            //cc.log(m[this.positions[i-a][j]].name);
+        } 
+        //向上扫描；
+        for (let a = 1; ;a++) {
+            if (i + a > 7 || m[this.positions[i+a][j]].name != clickedSnack.name) {
+                break;
+            }
+            if (m[this.positions[i+a][j]].name == clickedSnack.name) {
+                c_num++;
+                //记录与当前零食相同的零食；
+                vis[i+a][j]++;
+                //cc.log(vis[i][j-a]++);
+            }
+            //cc.log(m[this.positions[i+a][j]].name);
+        }
+        if (c_num < 3) {
+            c_num = 0;
+        }
+        //为3时即普通消除；
+        if (r_num == 3 || c_num == 3) {
+            //消除snack
+            //消除函数
+            cc.log(r_num);
+            cc.log(c_num);
+            //this.delSnack();
+            //返回1表示可以交换
+            return 1;
+        
+        }
+        //为4时即横纵特效；
+        else if (r_num == 4 || c_num == 4) {
+            //消除snack
+            //消除函数
+            //this.delSnack();
+            //返回1表示可以交换
+            return 1;
+        }
+        //为5时即魔力天使特效；
+        else if (r_num == 5 || c_num == 5) {
+            //消除snack
+            //消除函数
+            //this.delSnack();
+            //返回1表示可以交换
+            return 1;
+        }
+        else {
+            //返回0表示不可交换；
+            return 0;
+        }
+    },
+
+    //删除snack节点
+    delSnack () {
+        for(let i = 0;i < rows;++i) {           
+            for (let j = 0;j < columns;++j) { 
+                //vis值大于0，即消除；
+                if (vis[i][j] > 0) {
+                    vis[i][j] = 0;
+                    //删除此节点
+                    m[this.positions[i][j]].destroy();
+                    //创建节点
+                    if (this.randomNum() in this.snacks) {
+                        var snack = cc.instantiate(this.snacks[this.randomNum()]);
+                        snack.width = this.blockSizeW-5;
+                        snack.height = this.blockSizeH-5;
+                        snack.setPosition(0,0);
+                        snack.parent = n[this.positions[i][j]];
+                        m[this.positions[i][j]] = snack;
+                        cc.log(snack.name);
+                    }
+                    //this.addSnack();
+                }
+            }
+        }
+    },
+
+    //扫描所以snack节点，判断是否可以消除；
+    scanAllSnacks () {
+        
+        for(let i = 0;i < rows;++i) {    
+            for (let j = 0;j < columns;++j) {  
+                if (this.scanSwapSnack(i,j) == 1) {
+                    this.delSnack();
+                }
+            }
+        }   
     },
 
     init () {
