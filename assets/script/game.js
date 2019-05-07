@@ -69,7 +69,7 @@ cc.Class({
         let x = this.gap + this.blockSizeW/2;
         //纵坐标
         let y = 125 + this.blockSizeH/2;
-       
+        var m = new Map();
         this.positions = [];
         for(let i = 0;i < rows;++i) {
             this.positions.push([0,0,0,0,0,0]);
@@ -81,25 +81,51 @@ cc.Class({
                 //设置块的坐标位置      
                 block.setPosition(cc.v2(x,y));
                 block.parent = this.bg;
+                this.positions[i][j] = cc.v2(x,y);
+                //根据产生的随机数来填充格子
                 if (this.randomNum() in this.snacks) {
-                    let snack = cc.instantiate(this.snacks[this.randomNum()]);
+                    var snack = cc.instantiate(this.snacks[this.randomNum()]);
                     snack.width = this.blockSizeW-5;
                     snack.height = this.blockSizeH-5;
                     snack.setPosition(0,0);
                     snack.parent = block;
-                   
+
                 }
+
+                // var location = this.positions[i][j];
+                // m[location] = snack.name;
+                m.set(this.positions[i][j],snack.name);
+                //let localName = snack.name; 
+                //cc.log(snack.name);
+                // cc.sys.localStorage.setItem(this.positions[i][j],localName);
+                // cc.log(typeof(this.positions[i][j]));
+                //cc.log(this.positions[i][j]);
+                // let localName = cc.sys.localStorage.getItem(this.positions[i][j]);
+                // cc.log(localName);
+                // let left1 = cc.sys.localStorage.getItem(this.positions[i][j-1]);
+                // let left2 = cc.sys.localStorage.getItem(this.positions[i][j-2]);
+                //cc.log(left1);
+                //cc.log(left2);
+                // if (left1 == left2 == localName)  {
+                //     snack.destroy();
+                //     j--;
+                //     continue;
+                // }
                 //cc.log(x)
-                this.positions[i][j] = cc.v2(x,y);
+                
                 //横坐标加一个块的宽度
                 x += this.blockSizeW;
+                //cc.log(m);
             }
+           
             //纵坐标加一个块的高度
             y += this.blockSizeH;
             //设置横坐标为初始值
             x = this.gap + this.blockSizeW/2;
             //cc.log(x,y);
         }
+        //cc.log(m);
+        
         //cc.log(this.positions);
     },
 
