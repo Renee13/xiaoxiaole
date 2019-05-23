@@ -9,23 +9,35 @@ cc.Class({
         playAgain : cc.Button,
         returnBack : cc.Button,
         openMusic : cc.Button,
+        ButtonAudio: {
+            default: null,
+            type: cc.AudioClip
+        },
     },
 
     // LIFE-CYCLE CALLBACKS:
 
     onLoad () {
         //遮罩层，防止上层game场景的事件；
-        this.mask.active = true;  
-        //cc.log(this.mask);  
+        //this.mask.active = true;  
+        //cc.log(this.mask); 
+        this.returnBack.node.on('touchstart', this.PlayClick.bind(this));
+        this.playAgain.node.on('touchstart', this.PlayClick.bind(this));
+        this.exitCancel.node.on('touchstart', this.PlayClick.bind(this));
+        
         this.returnBack.node.on('touchend',this.ToMenu.bind(this));
         this.playAgain.node.on('touchend',this.Again.bind(this));
         this.exitCancel.node.on('touchend',this.Closewin.bind(this));
          
     },
 
+    PlayClick: function () {
+        cc.audioEngine.play(this.ButtonAudio, false, 1);
+    },
+    
     Closewin : function () {
-        //销毁alert节点，即关闭；
-        this.alert.destroy();
+        //关闭alert节点；
+        this.alert.active = false;
         //cc.log("看看能不能执行resume恢复场景");
         //恢复暂停的game场景；
         cc.director.resume();

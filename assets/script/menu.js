@@ -5,23 +5,35 @@ cc.Class({
 
     properties: {
         returnBack : cc.Button,
-         //开始按钮
+         //第一关按钮
         FirstPass:{
             default: null,
             type: cc.Button
         },
+        ButtonAudio: {
+            default: null,
+            type: cc.AudioClip
+        },
         //背景
         bg : cc.Node,
         //alert弹框资源
-        alertMenuEvent : cc.Prefab,
+        alertMenuEvent : cc.Node,
     },
 
     onLoad () {
         //场景加载时执行
+        //关闭节点
+        this.alertMenuEvent.active = false;
         //手指触摸事件touch
         //侦听touchend事件来触发转到entrance场景方法。不能用click，否则在微信中无效。
-        this.returnBack.node.on('touchend',this.ToEntrance.bind(this));
+        this.returnBack.node.on('touchstart', this.PlayClick.bind(this));
+        this.FirstPass.node.on('touchstart', this.PlayClick.bind(this));
+        this.returnBack.node.on('touchend',this.ToEntrance.bind(this));  
         this.FirstPass.node.on('touchend', this.AlertMenuEvent.bind(this));
+    },
+
+    PlayClick: function () {
+        cc.audioEngine.play(this.ButtonAudio, false, 1);
     },
 
     ToEntrance: function () {
@@ -31,10 +43,8 @@ cc.Class({
 
     AlertMenuEvent: function() {
         cc.director.pause();
-        let alertE = cc.instantiate(this.alertMenuEvent);
-        // cc.log(alertE);
-        //cc.log("alertalertalertalertalertalert");
-        alertE.parent = this.bg;
+        this.alertMenuEvent.active = true;
+        //alertE.parent = this.bg;
         //cc.log(alertE);
     },
 
