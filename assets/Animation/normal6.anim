@@ -1,9 +1,25 @@
 {
   "__type__": "cc.AnimationClip",
-  "_name": "",
+  "_name": "normal5",
   "_objFlags": 0,
-  "_duration": 0,
+  "_native": "",
+  "_duration": 0.016666666666666666,
   "sample": 60,
-  "curveData": {},
+  "speed": 1,
+  "wrapMode": 1,
+  "curveData": {
+    "comps": {
+      "cc.Sprite": {
+        "spriteFrame": [
+          {
+            "frame": 0,
+            "value": {
+              "__uuid__": "2aa1489f-9543-48ec-993f-8d30bf889d51"
+            }
+          }
+        ]
+      }
+    }
+  },
   "events": []
 }

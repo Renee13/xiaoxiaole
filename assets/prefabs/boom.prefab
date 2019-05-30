@@ -13,7 +13,7 @@
   },
   {
     "__type__": "cc.Node",
-    "_name": "寿司",
+    "_name": "boom",
     "_objFlags": 0,
     "_parent": null,
     "_children": [],
@@ -40,8 +40,8 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 90,
-      "height": 90
+      "width": 80,
+      "height": 82
     },
     "_anchorPoint": {
       "__type__": "cc.Vec2",
@@ -50,8 +50,8 @@
     },
     "_position": {
       "__type__": "cc.Vec3",
-      "x": 72,
-      "y": 198,
+      "x": 0,
+      "y": 0,
       "z": 0
     },
     "_scale": {
@@ -85,10 +85,10 @@
     "_srcBlendFactor": 770,
     "_dstBlendFactor": 771,
     "_spriteFrame": {
-      "__uuid__": "b46cf9ef-91dc-402b-a051-a1d699dbff8a"
+      "__uuid__": "85bcf730-c62d-413c-b992-60f0f29caf21"
     },
     "_type": 0,
-    "_sizeMode": 0,
+    "_sizeMode": 1,
     "_fillType": 0,
     "_fillCenter": {
       "__type__": "cc.Vec2",
@@ -114,12 +114,9 @@
     "_clips": [
       {
         "__uuid__": "585fbd13-d1e0-4fd9-82a1-f24231d28801"
-      },
-      {
-        "__uuid__": "a4b837ad-9d6e-4032-9381-a8da98e55631"
       }
     ],
-    "playOnLoad": false,
+    "playOnLoad": true,
     "_id": ""
   },
   {
@@ -128,9 +125,9 @@
       "__id__": 1
     },
     "asset": {
-      "__uuid__": "d4af6b71-6e45-4963-936c-e20c1a7f6ada"
+      "__uuid__": "a92b3761-1305-4d0f-9487-008d8223eb5e"
     },
-    "fileId": "248J2EgWRPn6uA2S7KIFNp",
+    "fileId": "94lK8+k8hN6bldebGQq9qy",
     "sync": false
   }
 ]

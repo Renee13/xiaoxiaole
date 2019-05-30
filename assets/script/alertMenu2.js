@@ -25,7 +25,7 @@ cc.Class({
         this.startBtn.node.on('touchend',this.ToGame.bind(this));
         this.exitCancel.node.on('touchend',this.Closewin.bind(this));
         //预加载game场景
-        cc.director.preloadScene("game", function () {
+        cc.director.preloadScene("game2", function () {
             cc.log("Next scene preloaded");
         });
     },
@@ -45,7 +45,7 @@ cc.Class({
 
     ToGame: function () {
         //调用系统方法加载menu场景
-        cc.director.loadScene('game');
+        cc.director.loadScene('game2');
         
     },
 

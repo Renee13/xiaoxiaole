@@ -1,14 +1,18 @@
 
 import alert from 'alert';
-
+window.Global = {
+    score: 0,
+};
 var rows = 8;   //排
 var columns = 6;    //列
-
+//标记是否可消除数组；
 var vis = [];
 //sum 触摸次数；
 var sum = 0;
+
 var lastx = 0;
 var lasty = 0;
+
 var touchesSnack = [];
 var touchesSnackData = [];
 var touchesSnackAnim = [];
@@ -19,14 +23,12 @@ for (let x = 0; x < rows; ++x) {
         vis[x][y] = 0;
     }
 }
-//零食块的状态值；
-// var ICON_STATE_NORMAL = 1
-// var ICON_STATE_MOVE   = 2
-// var ICON_STATE_PRECANCEL = 3
-// var ICON_STATE_PRECANCEL2 = 4
-// var ICON_STATE_CANCEL = 5
-// var ICON_STATE_CANCELED = 6
 
+var boomObj = [];
+//检查横排；
+var checkedR = [];
+//检查竖排；
+var checkedC = [];
 cc.Class({
     extends: cc.Component,
 
@@ -40,10 +42,10 @@ cc.Class({
         },
         //分数
         scoreLabel: cc.Label,
-        score: 0,
+        // score: 0,
         //步数
         stepsLabel: cc.Label,
-        steps: 9,
+        steps: 20,
         //饼干个数
         cookiesLabel: cc.Label,
         cookies: 15,
@@ -56,6 +58,14 @@ cc.Class({
             default: [],
             type: [cc.Prefab],
         },
+        boom: {
+            default: null,
+            type: cc.Prefab
+        },
+        // WorldAudio: {
+        //     default: null,
+        //     type: cc.AudioClip
+        // },
         ButtonAudio: {
             default: null,
             type: cc.AudioClip
@@ -64,34 +74,52 @@ cc.Class({
         bg: cc.Node,
         //alert弹框资源
         alertEvent: cc.Node,
+        //success弹框资源
+        successEvent: cc.Prefab,
+        //failure弹框资源
+        failureEvent: cc.Prefab,
+      
     },
     onLoad() {
         //场景加载时执行
         //关闭alertEent节点
+        // if (Global.setMusicOnOff%2 == 0) {
+        //     this.allMusicStart();
+        // }
         this.alertEvent.active = false;
         //侦听touchend事件来触他弹框。不能用click，否则在微信中无效。
         this.pauseBtn.node.on('touchstart', this.PlayClick.bind(this));
 
         this.pauseBtn.node.on('touchend', this.AlertEvent.bind(this));
         //初始化分数，过关条件，过关限制等数据；
-        this.initGameData();
+        // this.initGameData();
         //初始化背景块；
         this.drawBgBlocks();
         //初始化零食块；
         this.drawBgSnacks();
-
-        this.scanAllSnacks();
-       
-     
+        //全局扫描；
+        this.scanAllSnacksInit();
+        //死地图是重新生成初始地图；
+        //this.reDrawBgSnacks();
+        //初始化分数，过关条件，过关限制等数据；
+        this.initGameData();
+        
+        cc.director.pause();
+        cc.director.resume();
         //点击事件
         // this.canvas.on(cc.Node.EventType.TOUCH_START, this.onmTouchBagan, this);
         // this.canvas.on(cc.Node.EventType.TOUCH_MOVE, this.onmTouchMove, this);
         this.canvas.on(cc.Node.EventType.TOUCH_END, this.onmTouchEnd, this);
     },
+    
+    //背景音乐开始
+    // allMusicStart(){
+    //     this.gameSceneBGMAudioId = cc.audioEngine.play(this.WorldAudio, true, 1);
+    // },  
 
-    start() {
-        // this.scanAllSnacks();
-    },
+    // onDestroy: function(){
+    //     cc.audioEngine.stop(this.gameSceneBGMAudioId);
+    // },
 
     PlayClick: function () {
         cc.audioEngine.play(this.ButtonAudio, false, 1);
@@ -99,19 +127,19 @@ cc.Class({
 
     initGameData() {
         this.updateScore(0);
-        this.updateSteps(9);
+        this.updateSteps(20);
         this.updateCookies(15);
         
-        this.typeNum = 6;//零食块种类
-        this.isControl = false;  //是否控制着零食块
-        this.chooseSnackPos = cc.v2(-1, -1); //控制零食块的位置
-        this.deltaPos = cc.v2(0, 0); //相差坐标
+        // this.typeNum = 6;//零食块种类
+        // this.isControl = false;  //是否控制着零食块
+        // this.chooseSnackPos = cc.v2(-1, -1); //控制零食块的位置
+        // this.deltaPos = cc.v2(0, 0); //相差坐标
 
     },
 
     //当前分数初始化
     updateScore(number) {
-        this.score = number;
+        Global.score = number;
         this.scoreLabel.string = number;
     },
 
@@ -213,8 +241,8 @@ cc.Class({
                 snack.parent = this.bg;
                 this.snacksTable[i][j] = snack;
                 //cc.log(snack);
-                this.snacksAnimTable[i][j] = snack.getComponent(cc.Animation);
-
+                this.snacksAnimTable[i][j] = this.snacksTable[i][j].getComponent(cc.Animation);
+                
                 //cc.log(this.snacksAnimTable[i][j]);
                 // snack.on('touchend',this.exchange(snack,i,j),this);
                 //横坐标加一个块的宽度
@@ -228,7 +256,7 @@ cc.Class({
             x = this.gap + this.blockSizeW / 2;
             //cc.log(x,y);
         }
-        
+
     },
 
     randomNum() {
@@ -286,7 +314,7 @@ cc.Class({
         }
         //判断是否能消除；
         //r_num 小于 3 即不能消除；
-        cc.log(r_num);
+        //cc.log(r_num);
         if (r_num < 3) {
             for (let x = 0;x < r_num;x++) {
                 vis[left_i][left_j+x]--;
@@ -322,7 +350,7 @@ cc.Class({
             }
             //cc.log(this.snacksTable[i + a][j].name);
         }
-        cc.log(c_num);
+        //cc.log(c_num);
         if (c_num < 3) {
             for (let y = 0;y < c_num;y++) {
                 vis[up_i+y][up_j]--;
@@ -333,7 +361,7 @@ cc.Class({
         if (r_num == 3 || c_num == 3) {
             // cc.log(r_num);
             // cc.log(c_num);
-            this.score = this.score + 30;
+            Global.score = Global.score + 30;
             //返回1表示可以交换,执行消除
             return 1;
 
@@ -342,7 +370,7 @@ cc.Class({
         else if (r_num == 4 || c_num == 4) {
             // cc.log(r_num);
             // cc.log(c_num);
-            this.score = this.score + 60;
+            Global.score = Global.score + 60;
             //返回1表示可以交换
             return 1;
         }
@@ -350,7 +378,7 @@ cc.Class({
         else if (r_num == 5 || c_num == 5) {
             // cc.log(r_num);
             // cc.log(c_num);
-            this.score = this.score + 100;
+            Global.score = Global.score + 100;
             //返回1表示可以交换
             return 1;
         }
@@ -359,36 +387,62 @@ cc.Class({
             return 0;
         }
     },
-
-    //删除snack节点
-    delSnack() {
-        for (let i = 0; i < rows; ++i) {
-            for (let j = 0; j < columns; ++j) {
-                //vis值大于0，即消除；
-               
-                if (vis[i][j] > 0) {
-                    
-                    vis[i][j] = 0;
-                    //删除此节点
-                    //cc.log("aaaaaaaaa")
-                   // this.setSnackAnimObj(this.snacksAnimTable[i][j],'cancel');
-                    //cc.log(this.setSnackAnimObj(this.snacksAnimTable[i][j],'cancel'));
-                    this.snacksTable[i][j].destroy();
-                    this.snacksDataTable[i][j] = 9;   
-                    //this.addSnack();
-                    cc.log("进来没？");
+    //扫描所以snack节点，判断是否可以消除；
+    scanAllSnacksInit() {
+        //是否进行下轮全局扫描；
+        var flag = false;
+        do {
+            flag = false;
+            for (let i = 0; i < rows; ++i) {
+                for (let j = 0; j < columns; ++j) {
+                    if (this.scanSwapSnack(i, j) == 1) {
+                        
+                        this.delSnackInit();
+                        
+                        this.addSnackInit();
+                        //删除后添加完，再检查此节点是否可消除；
+                        j--;
+                        flag = true;
+                        break;
+                    }
+                }
+                if (flag == true) {
+                    break;
                 }
             }
         }
+        while (flag);
+    
+    },
+     //删除snack节点
+     delSnackInit() {
+       //var _this = this;
+       for (let i = 0; i < rows; ++i) {
+          
+           for (let j = 0; j < columns; ++j) {
+               //vis值大于0，即消除；
+               
+               if (vis[i][j] > 0) {
+                   
+                   vis[i][j] = 0;
+                   this.snacksDataTable[i][j] = 9;             
+                   //删除此节点
+                   this.snacksTable[i][j].active = false;
+                   
+               }
+           }
+       }
     },
 
-    addSnack() {
+    addSnackInit() {
+
         this.refreshScoreLabel();
         for (let i = 0; i < rows; ++i) {
             for (let j = 0; j < columns; ++j) {
                 //data值为9，即生成；
                 if (this.snacksDataTable[i][j] == 9) {
                     //创建节点
+                   
                     this.snacksDataTable[i][j] = this.randomNum();
                     var snack = cc.instantiate(this.snacks[this.snacksDataTable[i][j]]);
                     snack.width = this.blockSizeW - 5;
@@ -397,28 +451,176 @@ cc.Class({
                     snack.parent = this.bg;
                     this.snacksTable[i][j] = snack;
                     this.snacksAnimTable[i][j] = snack.getComponent(cc.Animation);
-                    //cc.log(snack.name);
+                    //cc.log(this.snacksAnimTable[i][j]);
+                    this.snacksTable[i][j].active = true;
+                   
+                    //cc.log(this.snacksTable[i][j].name);
                 }
             }
         }
     },
 
-    setSnackAnimObj (obj,name) {
-        obj.play(name);    
-        obj.setCurrentTime(2,name);
+    //删除snack节点
+    delSnack() {
+        
+         this.boomAnim = [];
+        //var _this = this;
+        for (let i = 0; i < rows; ++i) {
+            boomObj[i] = [];
+            this.boomAnim[i] = [];
+            for (let j = 0; j < columns; ++j) {
+                //vis值大于0，即消除；
+                boomObj[i][j] = [];
+                this.boomAnim[i][j] = [];
+                if (vis[i][j] > 0) {
+                    
+                    vis[i][j] = 0;
+                    
+                    if(this.snacksTable[i][j].name == "饼干") {
+                        this.cookies--;
+                            this.cookiesLabel.string = this.cookies;
+
+                    }
+
+                    this.snacksDataTable[i][j] = 9; 
+                    // var snackstable =  this.snacksTable[i][j]; 
+                    // var snacksAnim = this.snacksAnimTable[i][j];
+                    //删除此节点
+                    //cc.log("aaaaaaaaa")
+                    
+                    // let action1 = cc.spawn(cc.rotateBy(1, 90, 90), cc.scaleTo(1, 1.1, 1.1));
+                    // let action2 =  cc.delayTime(1);
+                    // let action3 = cc.callFunc(() => {
+                    //     this.snacksTable[i][j].active = false;
+                    //     cc.log("aiaiaiaiaiaiaiaiaiai")
+                    // },this);
+                    
+                    //this.snacksAnimTable[i][j].play("cancel"); 
+                    // cc.log(snacksAnim);
+                    // snacksAnim.scheduleOnce(function() {
+                    //     // 这里的 this 指向 component
+                    //     cc.log(snacksAnim);
+                    //     snackstable.active = false;
+                        
+                       
+                    // }, 0);  
+
+                    //this.snacksTable[i][j].runAction(cc.sequence(action,action2));
+                    this.snacksTable[i][j].active = false;
+                    var boom = cc.instantiate(this.boom);
+                    boom.width = this.blockSizeW - 5;
+                    boom.height = this.blockSizeH - 5;
+                    boom.setPosition(this.snacksPosTable[i][j]);
+                    boom.parent = this.bg;
+                    this.boomAnim[i][j] = boom.getComponent(cc.Animation);
+                    this.boomAnim[i][j].play("cancel");
+                    //this.boomAnim[i][j].on('finished',this.onFinished,this);
+                    boomObj[i][j] = boom;
+                    
+                   
+                    //cc.log(this.snacksTable[i][j].name);
+                }
+            }
+        }
     },
+
+
+    SuccessEvent: function () {
+        //暂停场景；
+        cc.director.pause();
+        var success = cc.instantiate(this.successEvent);
+        // cc.log(alertE);
+        success.parent = this.bg;
+    },
+    
+    FailureEvent: function () {
+        //暂停场景；
+        cc.director.pause();
+        var failure = cc.instantiate(this.failureEvent);
+        // cc.log(alertE);
+        failure.parent = this.bg;
+    },
+    //暂未使用
+    onFinished: function (event) {
+        cc.log(event)
+        for (let i = 0; i < rows; ++i) {
+            for (let j = 0; j < columns; ++j) {
+                //data值为9，即生成；
+                if (this.snacksDataTable[i][j] == 9) {
+                    boomObj[i][j].active = false;
+                    this.snacksDataTable[i][j] = this.randomNum();
+                    var snack = cc.instantiate(this.snacks[this.snacksDataTable[i][j]]);
+                    snack.width = this.blockSizeW - 5;
+                    snack.height = this.blockSizeH - 5;
+                    snack.setPosition(this.snacksPosTable[i][j]);
+                    snack.parent = this.bg;
+                    this.snacksTable[i][j] = snack;
+                    this.snacksAnimTable[i][j] = snack.getComponent(cc.Animation);
+                    //cc.log(this.snacksAnimTable[i][j]);
+                    this.snacksTable[i][j].active = true;
+                }
+            }
+        }
+    },
+    //暂未使用
+    setSnackAnimObj (obj,name) {
+        obj.play(name); 
+       
+        // var clip = animState.clip;
+        // var isPlaying = animState.isPlaying;
+        // // animation.on('finished',  this.onAnimCompleted, this);
+        // cc.log(clip)
+        // cc.log(isPlaying)
+    },
+
+
+    addSnack() {
+
+        this.refreshScoreLabel();
+        for (let i = 0; i < rows; ++i) {
+            for (let j = 0; j < columns; ++j) {
+                //data值为9，即生成；
+                if (this.snacksDataTable[i][j] == 9) {
+                    //创建节点
+                   
+                    this.boomAnim[i][j].scheduleOnce(function() {
+                        // 这里的 this 指向 component
+                        boomObj[i][j].active = false;
+                            
+                    }, 0.5); 
+                    this.snacksDataTable[i][j] = this.randomNum();
+                    var snack = cc.instantiate(this.snacks[this.snacksDataTable[i][j]]);
+                    snack.width = this.blockSizeW - 5;
+                    snack.height = this.blockSizeH - 5;
+                    snack.setPosition(this.snacksPosTable[i][j]);
+                    snack.parent = this.bg;
+                    this.snacksTable[i][j] = snack;
+                    this.snacksAnimTable[i][j] = snack.getComponent(cc.Animation);
+                    //cc.log(this.snacksAnimTable[i][j]);
+                    this.snacksTable[i][j].active = true;
+                    
+                    //cc.log(this.snacksTable[i][j].name);
+                }
+            }
+        }
+    },
+
+    
 
     //扫描所以snack节点，判断是否可以消除；
     scanAllSnacks() {
-        //是否进行下轮全局扫描；
+        //是否进行下轮全局扫描；flag为true继续循环，为false则不循环；
         var flag = false;
         do {
             flag = false;
             for (let i = 0; i < rows; ++i) {
                 for (let j = 0; j < columns; ++j) {
                     if (this.scanSwapSnack(i, j) == 1) {
+                        cc.log("qisiwole")
                         this.delSnack();
+                        cc.log("buxianghuole")
                         this.addSnack();
+                        cc.log("haofana")
                         //删除后添加完，再检查此节点是否可消除；
                         j--;
                         flag = true;
@@ -434,28 +636,11 @@ cc.Class({
        
     },
     refreshScoreLabel () {
-        this.scoreLabel.string =  this.score;
+        this.scoreLabel.string =  Global.score;
     },
 
     exchange(x, y) {
-        /*
-
-        如果两个方块不相邻
-            sum<-1
-            更新坐标
-        否则
-            如果两个零食一样
-                不交换
-            否则
-                交换
-                如果可以消除
-                    执行
-                    全局扫描
-                    sum<-0
-                否则
-                    换回来
-
-        */
+   
         var m = 0;
         var n = 0;
         if (sum == 0) {
@@ -473,8 +658,8 @@ cc.Class({
         
         if (sum == 2) {
             
-            cc.log(x,y);
-            cc.log(lastx,lasty);
+            // cc.log(x,y);
+            // cc.log(lastx,lasty);
             if ( lastx == x && lasty == y) {//同排同列
                 sum = 1; //处理连续点击一样的图片
             }
@@ -485,8 +670,9 @@ cc.Class({
                 if (Math.abs(lastx - x) == 1 || Math.abs(lasty - y) == 1) {
 
                     if(touchesSnackData[0]==touchesSnackData[1]){
-                        cc.log("交换的两个零食一样！不交换");
+                        //cc.log("交换的两个零食一样！不交换");
                         sum = 0;
+                        
                     }
                     else { //交换
                         this.snacksTable[x][y] = touchesSnack[0];
@@ -494,8 +680,8 @@ cc.Class({
                         
                         n = this.scanSwapSnack(x,y);
                         m = this.scanSwapSnack(lastx,lasty);
-                        cc.log(n);
-                        cc.log(m);
+                        // cc.log(n);
+                        // cc.log(m);
                         if (n==1 || m==1) { //可以消除
                             sum = 0;
                             touchesSnack[0] =  touchesSnack[1] = '';
@@ -505,33 +691,57 @@ cc.Class({
                             this.snacksAnimTable[lastx][lasty] = touchesSnackAnim[1];
                             this.snacksTable[x][y].setPosition(this.snacksPosTable[x][y]);
                             this.snacksTable[lastx][lasty].setPosition(this.snacksPosTable[lastx][lasty]);
-                            cc.log(this.snacksTable[x][y]);
-                            cc.log(this.snacksTable[lastx][lasty]);
-                            
+                            // cc.log(this.snacksTable[x][y]);
+                            // cc.log(this.snacksTable[lastx][lasty]);
+                            this.steps--;
+                            this.stepsLabel.string = this.steps;
                             this.delSnack();
-                            this.addSnack();
-                            // this.scanAllSnacks();
-                            cc.log("可以消除，执行");
                             
+                            this.addSnack();
+
+                            this.scanAllSnacksInit();
+
+                            
+                            if(this.cookies > 0) {
+                                if (this.steps == 0) {
+                                    //cc.log("game over!");
+                                    cc.director.pause();
+                                    cc.director.resume();
+                                    cc.director.pause();
+                                    this.FailureEvent();
+                                }
+                                
+                            }    
+                            if(this.cookies <= 0){
+                                if (this.steps >= 0) {
+                                    this.cookies = 0;
+                                    cc.director.pause();
+                                    cc.director.resume();
+                                    cc.director.pause();
+                                    
+                                    this.SuccessEvent();
+                                    //cc.log("success");
+                                }
+                            } 
+                            //this.reDrawBgSnacks();
+                            //cc.log("可以消除，执行");
+   
                         } 
                         else { //不可以消除，换回来
                             this.snacksTable[x][y] = touchesSnack[1];
                             this.snacksTable[lastx][lasty] = touchesSnack[0];
-                            cc.log("不可以消除，换回来")
-                            sum = 0;
+                            //cc.log("不可以消除，换回来")
+                            sum = 0;    
                         }
+                        
                     }
                 }
                 //交换的两个不相邻
                 else {
                     sum = 0;
                     touchesSnack[0] =  touchesSnack[1] = '';
-                    // touchesSnack[0] = touchesSnack[1];
-                   // touchesSnack[1] = '';
-                    // touchesSnackData[0] = touchesSnackData[1];
-                    //touchesSnackData[1] = 0;
                     
-                    cc.log("交换不相邻！");
+                    //cc.log("交换不相邻！");    
                 }
                 
             }
@@ -539,16 +749,12 @@ cc.Class({
             else { 
                 sum = 0;
                 touchesSnack[0] =  touchesSnack[1] = '';
-                // touchesSnack[0] = touchesSnack[1];
-               // touchesSnack[1] = '';
-                // touchesSnackData[0] = touchesSnackData[1];
-               // touchesSnackData[1] = 0;
                 
-                cc.log("交换不相邻!!!!!");
+                //cc.log("交换不相邻!!!!!");
             }
         }
         // cc.log(sum);
-            
+        //this.scanAllSnacks();    
 
     },
     onmTouchEnd(event) {
@@ -573,6 +779,7 @@ cc.Class({
                 if(this.snacksTable[i][j].getBoundingBoxToWorld().contains(touches)) {
                     
                     this.exchange(i,j);
+                    //this.scanAllSnacks();
                 }
                
             }
@@ -580,10 +787,134 @@ cc.Class({
         }
 
     },
+
+    exchangeTry(x, y) {
+   
+        var m = 0;
+        var n = 0;
+        if (sum == 0) {
+            //第一次点击
+            lastx = x;
+            lasty = y;
+        }
+        //把交换的图片存起来
+        //cc.log(this.snacksTable[x][y].getPosition());
+        touchesSnackAnim[sum] = this.snacksAnimTable[x][y];
+        touchesSnackData[sum] = this.snacksDataTable[x][y];
+        touchesSnack[sum] = this.snacksTable[x][y];
+        sum++;
+        
+        
+        if (sum == 2) {
+           
+                //确定交换的两个为相邻的；
+                
+                     //交换
+                        this.snacksTable[x][y] = touchesSnack[0];
+                        this.snacksTable[lastx][lasty] = touchesSnack[1];
+                        
+                        n = this.scanSwapSnack(x,y);
+                        m = this.scanSwapSnack(lastx,lasty);
+                        // cc.log(n);
+                        // cc.log(m);
+                        if (n==1 || m==1) { //可以消除,也要换回来
+                            this.snacksTable[x][y] = touchesSnack[1];
+                            this.snacksTable[lastx][lasty] = touchesSnack[0];
+                            sum = 0;
+                            return 1;
+   
+                        } 
+                        else { //不可以消除，换回来
+                            this.snacksTable[x][y] = touchesSnack[1];
+                            this.snacksTable[lastx][lasty] = touchesSnack[0];
+                            //cc.log("不可以消除，换回来")
+                            sum = 0;  
+                            return 0;  
+                        }
+                        
+                    
+                             
+        }
+    },
+    //检查地图是否为死地图；
+    checkMap() {
+        for (let i = 0; i < rows; ++i) {
+            checkedR[i] = [];
+            checkedC[i] = [];
+            for (let j = 0; j < columns; ++j) {
+                checkedR[i][j] = [];
+                checkedC[i][j] = [];
+                if (j == 5 && i != 7) {
+                    this.exchangeTry(i,j);
+                    checkedC[i][j] = this.exchangeTry(i+1,j);
+                    checkedR[i][j] = 0;
+                    continue;
+                }
+                if (i == 7 && j != 5) {
+                    this.exchangeTry(i,j);
+                    checkedR[i][j] = this.exchangeTry(i,j+1);
+                    checkedC[i][j] = 0;
+                    continue;
+                }
+                if (i == 7 && j == 5) {
+                    break;
+                }
+                this.exchangeTry(i,j);
+                checkedR[i][j] = this.exchangeTry(i,j+1);
+                
+                this.exchangeTry(i,j);
+                checkedC[i][j] = this.exchangeTry(i+1,j);
+            }
+        }
+        for (let i = 0; i < rows; ++i) {
+            
+            for (let j = 0; j < columns; ++j) {
+                if (checkedR[i][j] != 0 || checkeC[i][j] != 0) {
+                    return true; 
+                }
+
+            }
+        }
+        return false; //死地图 全为0
+    },
+
+    reDrawBgSnacks() {
+        //是否进行下轮重新生成；
+        var flag = false;
+        do {
+            //flag = false;
+            if (this.checkMap() == false) {
+                this.drawBgSnacks();
+                this.scanAllSnacksInit();
+                flag = true;   //继续判断是否需要重新生成
+            }
+            if (this.checkMap() == true) {
+               flag = false;
+            }
+           
+   
+        }
+        while (flag);   
+    }
     // update (dt) {},
 });
 
 
 
         
-        
+        /*
+        如果步数为0，饼干数不为0，即失败，游戏结束；
+        如果步数为0，饼干数也为0，最后一步成功，游戏结束；
+        如果步数不为0，饼干数为0，成功，游戏结束；
+        如果步数不为0，饼干数也不为0，游戏继续。
+
+
+        */   
+         /*
+        for i
+            for j
+                交换 i,j    i,j+1    return 0
+                交换 i,j    i+1,j    return 0
+
+
+        */ 
