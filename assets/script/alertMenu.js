@@ -4,6 +4,7 @@ cc.Class({
 
     properties: {
         alertM : cc.Node,
+        //遮罩层
         mask : cc.Node,
         exitCancel : cc.Button,
         startBtn : cc.Button,

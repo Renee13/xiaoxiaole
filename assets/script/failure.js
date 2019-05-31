@@ -10,12 +10,20 @@ cc.Class({
             default: null,
             type: cc.AudioClip
         },
+        ButtonAudio: {
+            default: null,
+            type: cc.AudioClip
+        },
     },
 
    
     onLoad () {
         this.mask.active = true;
         cc.audioEngine.play(this.failureAudio, false, 1);
+
+        this.againBtn.node.on('touchstart', this.PlayClick.bind(this));
+        this.returnBtn.node.on('touchstart', this.PlayClick.bind(this));
+        
         this.againBtn.node.on('touchend',this.Again.bind(this));
         this.returnBtn.node.on('touchend',this.ToMenu.bind(this));
         //预加载game场景
@@ -24,6 +32,10 @@ cc.Class({
         });
     },
 
+    PlayClick: function () {
+        cc.audioEngine.play(this.ButtonAudio, false, 1);
+    },
+    
     ToMenu: function () {
         //调用系统方法加载menu场景  
         cc.director.loadScene('menu');

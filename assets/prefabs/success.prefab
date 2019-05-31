@@ -922,6 +922,21 @@
     "successAudio": {
       "__uuid__": "3cbce8ac-8592-4b8d-bb3d-4e6db07830d9"
     },
+    "ButtonAudio": {
+      "__uuid__": "20246e27-5ca7-4acc-ac54-3ef70e6efa1f"
+    },
+    "messageWin": {
+      "__id__": 7
+    },
+    "stars1": {
+      "__uuid__": "c6fabcf9-92de-4aa8-8b87-8d7b9bff7452"
+    },
+    "stars2": {
+      "__uuid__": "85b48865-1510-49b8-acb0-d129f76b369e"
+    },
+    "stars3": {
+      "__uuid__": "0ed9c317-cd18-4835-9cb3-edc1b1da51ee"
+    },
     "_id": ""
   },
   {

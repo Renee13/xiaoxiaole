@@ -2,28 +2,30 @@
 import alert from 'alert';
 window.Global = {
     score: 0,
+    star : 0,
+    setMusicOnOff: 0,
 };
-var rows = 8;   //排
-var columns = 6;    //列
+var rows = 10;   //排
+var columns = 8;    //列
 //标记是否可消除数组；
 var vis = [];
 //sum 触摸次数；
 var sum = 0;
-
+//存储第一次触摸
 var lastx = 0;
 var lasty = 0;
-
+//存储触摸节点
 var touchesSnack = [];
 var touchesSnackData = [];
 var touchesSnackAnim = [];
-
+//初始化标记数组
 for (let x = 0; x < rows; ++x) {
     vis[x] = [];
     for (let y = 0; y < columns; ++y) {
         vis[x][y] = 0;
     }
 }
-
+//存储爆炸特效节点
 var boomObj = [];
 //检查横排；
 var checkedR = [];
@@ -58,15 +60,21 @@ cc.Class({
             default: [],
             type: [cc.Prefab],
         },
+        //爆炸预制节点
         boom: {
             default: null,
             type: cc.Prefab
         },
-        // WorldAudio: {
-        //     default: null,
-        //     type: cc.AudioClip
-        // },
+        //音效
+        WorldAudio: {
+            default: null,
+            type: cc.AudioClip
+        },
         ButtonAudio: {
+            default: null,
+            type: cc.AudioClip
+        },
+        BoomAudio: {
             default: null,
             type: cc.AudioClip
         },
@@ -82,17 +90,17 @@ cc.Class({
     },
     onLoad() {
         //场景加载时执行
-        //关闭alertEent节点
-        // if (Global.setMusicOnOff%2 == 0) {
-        //     this.allMusicStart();
-        // }
+        
+        if (Global.setMusicOnOff%2 == 0) {
+            this.allMusicStart();
+        } 
+        //关闭alertEvent节点
         this.alertEvent.active = false;
-        //侦听touchend事件来触他弹框。不能用click，否则在微信中无效。
+        
         this.pauseBtn.node.on('touchstart', this.PlayClick.bind(this));
-
+        //侦听touchend事件来触他弹框。不能用click，否则在微信中无效。
         this.pauseBtn.node.on('touchend', this.AlertEvent.bind(this));
-        //初始化分数，过关条件，过关限制等数据；
-        // this.initGameData();
+        
         //初始化背景块；
         this.drawBgBlocks();
         //初始化零食块；
@@ -106,50 +114,42 @@ cc.Class({
         
         cc.director.pause();
         cc.director.resume();
-        //点击事件
-        // this.canvas.on(cc.Node.EventType.TOUCH_START, this.onmTouchBagan, this);
-        // this.canvas.on(cc.Node.EventType.TOUCH_MOVE, this.onmTouchMove, this);
+        //注册触摸事件    
         this.canvas.on(cc.Node.EventType.TOUCH_END, this.onmTouchEnd, this);
     },
     
-    //背景音乐开始
-    // allMusicStart(){
-    //     this.gameSceneBGMAudioId = cc.audioEngine.play(this.WorldAudio, true, 1);
-    // },  
+    // 背景音乐开始
+    allMusicStart(){
+        this.gameSceneBGMAudioId = cc.audioEngine.play(this.WorldAudio, true, 1);
+    },  
 
-    // onDestroy: function(){
-    //     cc.audioEngine.stop(this.gameSceneBGMAudioId);
-    // },
+    onDestroy: function(){
+        cc.audioEngine.stop(this.gameSceneBGMAudioId);
+    },
 
     PlayClick: function () {
         cc.audioEngine.play(this.ButtonAudio, false, 1);
     },
-
+    //初始化数据；
     initGameData() {
         this.updateScore(0);
         this.updateSteps(20);
         this.updateCookies(15);
-        
-        // this.typeNum = 6;//零食块种类
-        // this.isControl = false;  //是否控制着零食块
-        // this.chooseSnackPos = cc.v2(-1, -1); //控制零食块的位置
-        // this.deltaPos = cc.v2(0, 0); //相差坐标
-
     },
 
-    //当前分数初始化
+    //当前分数初始化；
     updateScore(number) {
         Global.score = number;
         this.scoreLabel.string = number;
     },
 
-    //剩余步数初始化
+    //剩余步数初始化；
     updateSteps(number) {
         this.steps = number;
         this.stepsLabel.string = number;
     },
 
-    //需要消除的饼干数初始化
+    //需要消除的饼干数初始化；
     updateCookies(number) {
         this.cookies = number;
         this.cookiesLabel.string = number;
@@ -167,7 +167,7 @@ cc.Class({
 
     //循环画出背景块；
     drawBgBlocks() {
-        //循环获得6*8的块
+        
         //获得块的width
         this.blockSizeW = (cc.winSize.width - this.gap * 2) / columns;
         //获得块的height
@@ -176,9 +176,9 @@ cc.Class({
         let x = this.gap + this.blockSizeW / 2;
         //纵坐标
         let y = 125 + this.blockSizeH / 2;
-        this.positions = [];
+        // this.positions = [];
         for (let i = 0; i < rows; ++i) {
-            this.positions.push([0, 0, 0, 0, 0, 0]);
+            // this.positions.push([0, 0, 0, 0, 0, 0]);
             for (let j = 0; j < columns; ++j) {
                 //克隆已有节点
                 let block = cc.instantiate(this.blockSN);
@@ -187,7 +187,7 @@ cc.Class({
                 //设置块的坐标位置      
                 block.setPosition(cc.v2(x, y));
                 block.parent = this.bg;
-                this.positions[i][j] = cc.v2(x, y);
+                //this.positions[i][j] = cc.v2(x, y);
                 //横坐标加一个块的宽度
                 x += this.blockSizeW;
                 //cc.log(m);
@@ -200,7 +200,7 @@ cc.Class({
         }
 
     },
-    //循环
+    //循环生成零食节点
     drawBgSnacks() {
         //存储snack节点；
         this.snacksTable = [];
@@ -261,8 +261,10 @@ cc.Class({
 
     randomNum() {
         //取得1~6的整数；
+        //0~1*6 = 0~6
         let randoms = Math.random() * 6;
         //返回大于或等于其数值参数的最小整数;
+        //1——6
         let num = Math.ceil(randoms);
         return num;
 
@@ -286,16 +288,19 @@ cc.Class({
         var up_j = j;
         //向左扫描；其中本身也记录了
         for (let a = 0; ; a++) {
+            //扫描到j-a<0时即左边已经没有可以扫描的节点了，跳出循环；
+            //一旦扫描到的节点名和当前点击的不同时，跳出循环；
             if (j - a < 0 || this.snacksTable[i][j - a].name != clickedSnack.name) {
                 break;
             }
+            //左侧的和点击
             if (this.snacksTable[i][j - a].name == clickedSnack.name) {
                 r_num++;
-                //记录与当前零食相同的零食；
+                //与当前零食相同的零食  的标记数组+1；
                 vis[i][j - a]++;
                 //cc.log(vis[i][j-a]++);
                 if (a != 0) { //a==0时为本身
-                    left_j--; //纵列-1；
+                    left_j--; //纵列-1；记录相同的最左边零食；
                 }
 
             }
@@ -303,7 +308,7 @@ cc.Class({
         }
         //向右扫描；
         for (let a = 1; ; a++) {
-            if (j + a > 5 || this.snacksTable[i][j + a].name != clickedSnack.name) {
+            if (j + a > 7 || this.snacksTable[i][j + a].name != clickedSnack.name) {
                 break;
             }
             if (this.snacksTable[i][j + a].name == clickedSnack.name) {
@@ -315,9 +320,11 @@ cc.Class({
         //判断是否能消除；
         //r_num 小于 3 即不能消除；
         //cc.log(r_num);
-        if (r_num < 3) {
+        if (r_num < 3) {    
             for (let x = 0;x < r_num;x++) {
-                vis[left_i][left_j+x]--;
+                //相同零食的标记数组-1，不能置为0，以防竖排可以消除
+                vis[left_i][left_j+x]--; 
+                //向右扫描不需要记录最右侧，因为当记录最左侧后，根据r_num循环向右，可以保证右侧的被-1
             }
             r_num = 0;
         }
@@ -339,7 +346,7 @@ cc.Class({
         }
         //向上扫描；
         for (let a = 1; ; a++) {
-            if (i + a > 7 || this.snacksTable[i + a][j].name != clickedSnack.name) {
+            if (i + a > 9 || this.snacksTable[i + a][j].name != clickedSnack.name) {
                 break;
             }
             if (this.snacksTable[i + a][j].name == clickedSnack.name) {
@@ -387,10 +394,13 @@ cc.Class({
             return 0;
         }
     },
-    //扫描所以snack节点，判断是否可以消除；
+    //扫描所有snack节点，判断是否可以消除；
     scanAllSnacksInit() {
         //是否进行下轮全局扫描；
         var flag = false;
+        //先进行一次全局扫描；
+        //if flag = true 继续循环do while 直到没有可以消除的节点
+        //if flag = false 跳出循环do while 
         do {
             flag = false;
             for (let i = 0; i < rows; ++i) {
@@ -420,13 +430,14 @@ cc.Class({
        for (let i = 0; i < rows; ++i) {
           
            for (let j = 0; j < columns; ++j) {
-               //vis值大于0，即消除；
+               //标记数组vis值大于0，即消除；
                
                if (vis[i][j] > 0) {
                    
                    vis[i][j] = 0;
+                   //置零食节点对应数据为9，以便进行生成节点；
                    this.snacksDataTable[i][j] = 9;             
-                   //删除此节点
+                   //关闭此节点
                    this.snacksTable[i][j].active = false;
                    
                }
@@ -442,7 +453,6 @@ cc.Class({
                 //data值为9，即生成；
                 if (this.snacksDataTable[i][j] == 9) {
                     //创建节点
-                   
                     this.snacksDataTable[i][j] = this.randomNum();
                     var snack = cc.instantiate(this.snacks[this.snacksDataTable[i][j]]);
                     snack.width = this.blockSizeW - 5;
@@ -452,6 +462,7 @@ cc.Class({
                     this.snacksTable[i][j] = snack;
                     this.snacksAnimTable[i][j] = snack.getComponent(cc.Animation);
                     //cc.log(this.snacksAnimTable[i][j]);
+                    //激活此节点
                     this.snacksTable[i][j].active = true;
                    
                     //cc.log(this.snacksTable[i][j].name);
@@ -462,8 +473,8 @@ cc.Class({
 
     //删除snack节点
     delSnack() {
-        
-         this.boomAnim = [];
+        //存储爆炸动画；
+        this.boomAnim = [];
         //var _this = this;
         for (let i = 0; i < rows; ++i) {
             boomObj[i] = [];
@@ -478,7 +489,7 @@ cc.Class({
                     
                     if(this.snacksTable[i][j].name == "饼干") {
                         this.cookies--;
-                            this.cookiesLabel.string = this.cookies;
+                        this.cookiesLabel.string = this.cookies;
 
                     }
 
@@ -507,13 +518,18 @@ cc.Class({
 
                     //this.snacksTable[i][j].runAction(cc.sequence(action,action2));
                     this.snacksTable[i][j].active = false;
+
                     var boom = cc.instantiate(this.boom);
                     boom.width = this.blockSizeW - 5;
                     boom.height = this.blockSizeH - 5;
                     boom.setPosition(this.snacksPosTable[i][j]);
                     boom.parent = this.bg;
+                    //获取节点的animation动画组件
                     this.boomAnim[i][j] = boom.getComponent(cc.Animation);
+                    //播放组件的cancel动画
                     this.boomAnim[i][j].play("cancel");
+                    //播放动画音效
+                    this.PlayBoom();
                     //this.boomAnim[i][j].on('finished',this.onFinished,this);
                     boomObj[i][j] = boom;
                     
@@ -523,8 +539,11 @@ cc.Class({
             }
         }
     },
-
-
+    //播放爆炸音效；
+    PlayBoom: function () {
+        cc.audioEngine.play(this.BoomAudio, false, 0.5);
+    },
+    //成功弹框事件；
     SuccessEvent: function () {
         //暂停场景；
         cc.director.pause();
@@ -532,7 +551,7 @@ cc.Class({
         // cc.log(alertE);
         success.parent = this.bg;
     },
-    
+    ///失败弹框事件；
     FailureEvent: function () {
         //暂停场景；
         cc.director.pause();
@@ -573,16 +592,16 @@ cc.Class({
         // cc.log(isPlaying)
     },
 
-
+    //生成节点；
     addSnack() {
-
+        //刷新分数；
         this.refreshScoreLabel();
         for (let i = 0; i < rows; ++i) {
             for (let j = 0; j < columns; ++j) {
                 //data值为9，即生成；
                 if (this.snacksDataTable[i][j] == 9) {
                     //创建节点
-                   
+                    //组件的计时器使用，指定0.5s后执行一次；
                     this.boomAnim[i][j].scheduleOnce(function() {
                         // 这里的 this 指向 component
                         boomObj[i][j].active = false;
@@ -635,14 +654,16 @@ cc.Class({
         while (flag);
        
     },
+    //更新分数；
     refreshScoreLabel () {
         this.scoreLabel.string =  Global.score;
     },
-
+    //交换函数；
     exchange(x, y) {
-   
+        //存储第一次和第二次触摸交换后是否可以消除；
         var m = 0;
         var n = 0;
+        //记录第几次点击
         if (sum == 0) {
             //第一次点击
             lastx = x;
@@ -677,14 +698,15 @@ cc.Class({
                     else { //交换
                         this.snacksTable[x][y] = touchesSnack[0];
                         this.snacksTable[lastx][lasty] = touchesSnack[1];
-                        
+                        //1为可以消除，0不可消除；
                         n = this.scanSwapSnack(x,y);
                         m = this.scanSwapSnack(lastx,lasty);
                         // cc.log(n);
                         // cc.log(m);
-                        if (n==1 || m==1) { //可以消除
+                        if (n==1 || m==1) { //可以消除；
                             sum = 0;
                             touchesSnack[0] =  touchesSnack[1] = '';
+                            //交换存储过的其他数据；
                             this.snacksDataTable[x][y] = touchesSnackData[0];
                             this.snacksDataTable[lastx][lasty] = touchesSnackData[1];
                             this.snacksAnimTable[x][y] = touchesSnackAnim[0];
@@ -693,36 +715,64 @@ cc.Class({
                             this.snacksTable[lastx][lasty].setPosition(this.snacksPosTable[lastx][lasty]);
                             // cc.log(this.snacksTable[x][y]);
                             // cc.log(this.snacksTable[lastx][lasty]);
+                            //剩余步数-1；
                             this.steps--;
                             this.stepsLabel.string = this.steps;
-                            this.delSnack();
-                            
-                            this.addSnack();
-
-                            this.scanAllSnacksInit();
-
-                            
-                            if(this.cookies > 0) {
-                                if (this.steps == 0) {
-                                    //cc.log("game over!");
-                                    cc.director.pause();
-                                    cc.director.resume();
-                                    cc.director.pause();
-                                    this.FailureEvent();
-                                }
-                                
-                            }    
-                            if(this.cookies <= 0){
-                                if (this.steps >= 0) {
-                                    this.cookies = 0;
-                                    cc.director.pause();
-                                    cc.director.resume();
-                                    cc.director.pause();
+                            //action为延时0.3s的动作；
+                            let action =  cc.delayTime(0.3);
+                            //action1为消除节点动作；
+                            let action1 = cc.callFunc(() => {
+                                this.delSnack();
+                            },this);
+                            let action2 = cc.callFunc(() => {
+                                this.addSnack();
+                            },this);
+                            //action3为全局扫描动作；
+                            let action3 = cc.callFunc(() => {
+                                this.scanAllSnacksInit();
+                            },this);
+                            //action4为判断游戏是否结束的动作；
+                            let action4 =  cc.callFunc(() => {
+                                if(this.cookies > 0) {
+                                    if (this.steps == 0) {
+                                        //cc.log("game over!");
+                                        cc.director.pause();
+                                        cc.director.resume();
+                                        cc.director.pause();
+                                        Global.score = 0;
+                                        this.refreshScoreLabel();
+                                        //游戏失败；
+                                        this.FailureEvent();
+                                    }
                                     
-                                    this.SuccessEvent();
-                                    //cc.log("success");
-                                }
-                            } 
+                                }    
+                                if(this.cookies <= 0){
+                                    if (this.steps >= 0) {
+                                        this.cookies = 0;
+                                        Global.score = Global.score + this.steps*50;
+                                        this.refreshScoreLabel();
+                                        this.steps = 0;
+                                        this.stepsLabel.string = this.steps;
+                                        cc.director.pause();
+                                        cc.director.resume();
+                                        cc.director.pause();
+                                        //游戏成功；
+                                        this.SuccessEvent();
+                                        //cc.log("success");
+                                    }
+                                } 
+                            },this);
+                            //顺序执行以上动作；
+                            this.bg.runAction(cc.sequence(action,action1,action2,action3,action4));
+                            //this.snacksTable[lastx][lasty].runAction(action);
+                            // this.delSnack();
+                            
+                            // this.addSnack();
+
+                            // this.scanAllSnacksInit();
+
+                            
+                            
                             //this.reDrawBgSnacks();
                             //cc.log("可以消除，执行");
    
@@ -757,13 +807,16 @@ cc.Class({
         //this.scanAllSnacks();    
 
     },
+    //触摸事件；
     onmTouchEnd(event) {
+        //获取触摸的坐标；
         var touches = event.getLocation();
         var touchesX = touches.x;
         var touchesY = touches.y;
         //var touchesStart = touchesStart[0].getStartLocation();
         //cc.log(touches);
         //触点范围； x += this.blockSizeW; y += this.blockSizeH;
+        //有效的触摸范围；
         let xMin= this.gap ;
         let yMin = 125 ;
         let xMax= this.gap + this.blockSizeW*columns ;
@@ -775,9 +828,10 @@ cc.Class({
 
         for (let i = 0; i < rows; ++i) {
             for (let j = 0; j < columns; ++j) {
-                //触点是否在节点内；
+                //判断触摸位置是否在节点内；
+                //getBoundingBoxToWorld世界坐标系的包围盒
                 if(this.snacksTable[i][j].getBoundingBoxToWorld().contains(touches)) {
-                    
+                    //如果在，触发交换事件；
                     this.exchange(i,j);
                     //this.scanAllSnacks();
                 }
@@ -844,19 +898,19 @@ cc.Class({
             for (let j = 0; j < columns; ++j) {
                 checkedR[i][j] = [];
                 checkedC[i][j] = [];
-                if (j == 5 && i != 7) {
+                if (j == 7 && i != 9) {
                     this.exchangeTry(i,j);
                     checkedC[i][j] = this.exchangeTry(i+1,j);
                     checkedR[i][j] = 0;
                     continue;
                 }
-                if (i == 7 && j != 5) {
+                if (i == 9 && j != 7) {
                     this.exchangeTry(i,j);
                     checkedR[i][j] = this.exchangeTry(i,j+1);
                     checkedC[i][j] = 0;
                     continue;
                 }
-                if (i == 7 && j == 5) {
+                if (i == 9 && j == 7) {
                     break;
                 }
                 this.exchangeTry(i,j);
